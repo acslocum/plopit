@@ -11,7 +11,7 @@ const int FLUSH_IT = 1;
 const int LIFT_IT = 2;
 
 const int MAX_WAIT_SECONDS = 10;
-const int SLEEP_TIME = 100;
+const int SLEEP_TIME = 200;
 
 const int PLOP_PIN=2;
 const int FLUSH_PIN=4;
@@ -25,7 +25,10 @@ void setup() {
   pinMode(FLUSH_PIN, INPUT);
   pinMode(LIFT_PIN, INPUT);
   pinMode(NEW_GAME_PIN, INPUT);
+  newGame(); 
+
 }
+
 
 void loop() {
   if(newGamePressed()) {
@@ -43,6 +46,7 @@ void loop() {
   }
   delay(SLEEP_TIME);
 }
+
 
 void checkForTimeOut() {
   if(waitTimeExceeded(waitCounter)) {
@@ -68,23 +72,25 @@ void checkForIncorrectResponse() {
 void correctResponseActions() {
   waitCounter = 0;
   score++; 
+  delay(5000);
 }
 
 void gameOverActions() {
   gameOver(score);
   waitCounter = 0;
-  delay(5000);
+  delay(4000);
 }
 
 boolean newGamePressed() {
-  //digitalRead(NEW_GAME_PIN)==HIGH;
-  return false; 
+  digitalRead(NEW_GAME_PIN)==HIGH;
 }
 
 void newGame() {
   waitCounter = 0;
   score = 0;
   playing = true;
+  Serial.println("GameStarting!");
+  delay(4000);
 }
 
 boolean gameOn() {
@@ -112,22 +118,21 @@ boolean incorrectResponse() {
 }
 
 boolean expectPlopIt() {
-  //return digitalRead(PLOP_PIN) == HIGH;
-  return true;
+  return digitalRead(PLOP_PIN) == HIGH;
+  //return true;
 }
 
 boolean expectFlushIt() {
-  //return digitalRead(FLUSH_PIN) == HIGH;
-  return false; 
+  return digitalRead(FLUSH_PIN) == HIGH;
 }
 
 boolean expectLiftIt() {
-  //return digitalRead(LIFT_PIN) == HIGH;
-  return false; 
+  return digitalRead(LIFT_PIN) == HIGH;
 }
 
 boolean waitTimeExceeded(int count) {
-  return ((MAX_WAIT_SECONDS*1000)-(count*SLEEP_TIME)) <= 0; 
+  false;
+  //return ((MAX_WAIT_SECONDS*1000)-(count*SLEEP_TIME)) <= 0; 
 }
 
 void gameOver(int score) {
