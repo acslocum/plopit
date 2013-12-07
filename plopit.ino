@@ -4,7 +4,7 @@ int incomingByte=0;
 int currentLevel = 1;
 int waitCounter = 0;
 int score = 0;
-int currentEvent = 0;
+int currentEvent = -1;
 int lastEvent = -1;
 boolean playing = false;
 int lastButtonDown = -1;
@@ -13,7 +13,8 @@ const int FLUSH_IT = 1;
 const int LIFT_IT = 2;
 const int NEW_GAME = 3;
 
-const int MAX_WAIT_SECONDS = 10;
+const int MAX_WAIT_SECONDS = 5;
+int currentWaitSeconds;
 const int SLEEP_TIME = 200;
 
 const int PLUNGE_PIN=2;
@@ -26,9 +27,9 @@ const String NEW_GAME_STRING = "plop";
 const String PLUNGE_STRING = "plunge";
 const String LIFT_STRING = "lift";
 const String FLUSH_STRING = "flush";
-const String USER_PLUNGED_STRING = "plunged";
-const String USER_LIFTED_STRING = "lifted";
-const String USER_FLUSHED_STRING = "flushed";
+const String USER_PLUNGED_STRING = "didplunge";
+const String USER_LIFTED_STRING = "didlift";
+const String USER_FLUSHED_STRING = "didflush";
 
 void setup() {
   Serial.begin(9600);
@@ -61,10 +62,12 @@ void playGame() {
       returnEvent(currentEvent);
     }
     waitCounter++;
-    userFeedback();
     checkForTimeOut();
     checkForCorrectResponse();
     checkForIncorrectResponse();
+  } else {
+    readInputs();
+    delay(SLEEP_TIME);
   }
   delay(SLEEP_TIME);
   
@@ -76,17 +79,9 @@ void readInputs() {
  //expectFlushIt();
  //newGamePressed();
  
- if(expectPlungeIt()) {
-  Serial.println(PLUNGE_STRING); 
- } else if(!expectLiftIt()) {
-   Serial.println(LIFT_STRING);
- } else if(expectFlushIt()) {
-   Serial.println(FLUSH_STRING);
- } else if(newGamePressed()) {
-   Serial.println(NEW_GAME_STRING);
+ if(expectPlungeIt()||expectLiftIt()||expectFlushIt()) {
+   userFeedback(lastButtonDown); 
  }
- 
- delay(10*100); 
 }
 
 
@@ -103,19 +98,21 @@ void checkForCorrectResponse() {
   }
 }
 
-void userFeedback() {
-  if(lastButtonDown==PLUNGE_IT) {
+void userFeedback(int action) {
+  
+  if(action==PLUNGE_IT) {
     Serial.println(USER_PLUNGED_STRING);
-  } else if(lastButtonDown==FLUSH_IT) {
+  } else if(action==FLUSH_IT) {
     Serial.println(USER_FLUSHED_STRING);
-  } else if(lastButtonDown==LIFT_IT) {
+  } else if(action==LIFT_IT) {
     Serial.println(USER_LIFTED_STRING);
   }
+  
 }
 
 void checkForIncorrectResponse() {
   if(incorrectResponse()) {
-    userFeedback();
+    userFeedback(lastButtonDown);
     //Serial.print(lastButtonDown);
     //Serial.println(" Wrong input!");
     gameOverActions(); 
@@ -125,7 +122,12 @@ void checkForIncorrectResponse() {
 void correctResponseActions() {
   waitCounter = 0;
   lastEvent = currentEvent;
-  score++; 
+  score++;
+  userFeedback(currentEvent);
+  if(score%10==9) {
+    currentWaitSeconds--;
+    Serial.println("faster");
+  }
   correctResponseDelay();
 }
 
@@ -145,6 +147,7 @@ void newGame() {
   waitCounter = 0;
   score = 0;
   playing = true;
+  currentWaitSeconds = MAX_WAIT_SECONDS;
   Serial.println(NEW_GAME_STRING);
   delay(4000);
 }
@@ -239,8 +242,8 @@ boolean newGamePressed() {
 }
 
 boolean waitTimeExceeded(int count) {
-  false;
-  //return ((MAX_WAIT_SECONDS*1000)-(count*SLEEP_TIME)) <= 0; 
+  //false;
+  return ((currentWaitSeconds*1000)-(count*SLEEP_TIME)) <= 0; 
 }
 
 void gameOver(int score) {
