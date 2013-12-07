@@ -15,11 +15,28 @@ def run
 end
 
 def play_sound(line)
-  files = Dir.glob("sounds/#{line}*.mp3")
-  sample = files.sample
-  puts "#{line} #{sample}"
-  `afplay #{sample}` unless files.empty?
-  
+  if(line.to_i > 0)
+    play_score(line.to_i)
+  else
+    play_command(line)
+  end
+end
+
+def play_score(number)
+  puts "score: #{number}"
+  (number/10).times { play('sounds/10.mp3')}
+  (number%10).times { play('sounds/1.mp3')}
+end
+
+def play_command(line)
+    files = Dir.glob("sounds/#{line}*.mp3")
+    sample = files.sample
+    puts "#{line} #{sample}"
+    play(sample) unless files.empty?
+end
+
+def play(file)
+  `afplay -t 1 #{file}`
 end
 
 
